@@ -1,5 +1,5 @@
 
-import { RequestStatus, VehicleRequest, SystemSettings, Company, User } from './types';
+import { RequestStatus, VehicleRequest, SystemSettings, Company, User } from './types.ts';
 
 export const INITIAL_COMPANIES: Company[] = [
   { id: '1', name: 'شركة النور للسيارات', addedDate: '2024-01-01' },
@@ -49,48 +49,6 @@ export const MOCK_REQUESTS: VehicleRequest[] = [
     financialSettlement: { status: RequestStatus.PENDING },
     cancellation: { status: RequestStatus.PENDING },
     notes: 'بانتظار الرسوم المالية',
-    settlementDays: 15
-  },
-  {
-    id: '2',
-    applicantName: 'فاطمة حسن',
-    requestDate: '2024-05-15',
-    vehicleNumber: 'د هـ و 5678',
-    ownership: 'عقد إيجار منتهي',
-    company: 'شركة المركبات المتحدة',
-    correspondence: {
-      status: RequestStatus.DONE,
-      bookNumber: 'س/998',
-      bookDate: '2024-05-20'
-    },
-    financialSettlement: { status: RequestStatus.PENDING },
-    cancellation: { status: RequestStatus.PENDING },
-    notes: '',
-    settlementDays: 15
-  },
-  {
-    id: '3',
-    applicantName: 'خالد عبدالله',
-    requestDate: '2024-05-20',
-    vehicleNumber: 'ز ح ط 9012',
-    ownership: 'ملك صرف',
-    company: 'شركة الخليج للسيارات',
-    correspondence: {
-      status: RequestStatus.DONE,
-      bookNumber: 'ل/445',
-      bookDate: '2024-05-22'
-    },
-    financialSettlement: {
-      status: RequestStatus.DONE,
-      bookNumber: 'ر/77',
-      bookDate: '2024-05-23'
-    },
-    cancellation: {
-      status: RequestStatus.DONE,
-      bookNumber: 'ق/11',
-      bookDate: '2024-05-25'
-    },
-    notes: 'تم الإنجاز بنجاح',
     settlementDays: 15
   }
 ];

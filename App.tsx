@@ -20,18 +20,18 @@ import {
   AlertTriangle,
   Trash2
 } from 'lucide-react';
-import { VehicleRequest, SystemSettings, RequestStatus, Company, User } from './types';
-import { INITIAL_SETTINGS } from './constants';
-import RequestTable from './components/RequestTable';
-import RequestForm from './components/RequestForm';
-import RequestDetails from './components/RequestDetails';
-import Dashboard from './components/Dashboard';
-import Settings from './components/Settings';
-import CompanyManager from './components/CompanyManager';
-import Reports from './components/Reports';
-import UserManager from './components/UserManager';
-import Auth from './components/Auth';
-import { supabase } from './supabase';
+import { VehicleRequest, SystemSettings, RequestStatus, Company, User } from './types.ts';
+import { INITIAL_SETTINGS } from './constants.ts';
+import RequestTable from './components/RequestTable.tsx';
+import RequestForm from './components/RequestForm.tsx';
+import RequestDetails from './components/RequestDetails.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import Settings from './components/Settings.tsx';
+import CompanyManager from './components/CompanyManager.tsx';
+import Reports from './components/Reports.tsx';
+import UserManager from './components/UserManager.tsx';
+import Auth from './components/Auth.tsx';
+import { supabase } from './supabase.ts';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
@@ -75,15 +75,12 @@ const App: React.FC = () => {
     const fetchData = async () => {
       setDataLoading(true);
       try {
-        // Fetch Settings
         const { data: settingsData } = await supabase.from('settings').select('*').eq('id', 1).single();
         if (settingsData) setSettings(settingsData.data);
 
-        // Fetch Companies
         const { data: companiesData } = await supabase.from('companies').select('*').order('name');
         if (companiesData) setCompanies(companiesData);
 
-        // Fetch Requests
         const { data: requestsData } = await supabase.from('requests').select('*').order('created_at', { ascending: false });
         if (requestsData) setRequests(requestsData);
       } catch (error) {
@@ -96,7 +93,6 @@ const App: React.FC = () => {
     fetchData();
   }, [session]);
 
-  // Sync primary settings
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--primary-color', settings.primaryColor);
@@ -167,12 +163,6 @@ const App: React.FC = () => {
     await supabase.from('settings').upsert({ id: 1, data: newSettings });
   };
 
-  const handleUpdateCompanies = async (updatedCompanies: Company[]) => {
-    // This is simplified. In a real app, you'd handle individual add/delete operations.
-    // For this context, we'll let the CompanyManager handle state, but App will provide the save function.
-    setCompanies(updatedCompanies);
-  };
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setShowLogoutConfirm(false);
@@ -203,15 +193,7 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen flex h-screen overflow-hidden transition-all duration-300 ${settings.darkMode ? 'dark bg-[#0f172a]' : 'bg-[#f1f5f9]'}`}>
-      <style>{`
-        :root { --primary-color: ${settings.primaryColor}; }
-        body { font-family: 'Cairo', sans-serif; }
-        .bg-primary { background-color: var(--primary-color) !important; }
-        .text-primary { color: var(--primary-color) !important; }
-        .sidebar-active-item { color: white !important; background: rgba(255, 255, 255, 0.25) !important; font-weight: 900 !important; }
-      `}</style>
-      
-      <aside className={`flex-shrink-0 z-[100] shadow-2xl overflow-hidden flex flex-col ${mobileMenuOpen ? 'fixed inset-y-0 right-0 transform translate-x-0' : 'hidden lg:flex'} ${sidebarCollapsed ? 'w-20' : 'w-72'} ${settings.darkMode ? 'bg-[#1e293b]' : 'bg-primary'}`}>
+      <aside className={`flex-shrink-0 z-[100] shadow-2xl overflow-hidden flex flex-col ${mobileMenuOpen ? 'fixed inset-y-0 right-0 transform translate-x-0' : 'hidden lg:flex'} ${sidebarCollapsed ? 'w-20' : 'w-72'} ${settings.darkMode ? 'bg-[#1e293b]' : 'bg-primary'}`} style={{ backgroundColor: !settings.darkMode ? settings.primaryColor : undefined }}>
          <div className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-4 text-white">
               <div className="w-10 h-10 bg-white rounded-2xl flex items-center justify-center text-blue-900 shadow-lg">
@@ -222,7 +204,7 @@ const App: React.FC = () => {
          </div>
          <nav className="flex-1 px-4 mt-6 space-y-2">
             {navItems.map(item => (
-              <button key={item.id} onClick={() => { if(item.id === 'new_request') { setEditingRequest(null); setIsFormOpen(true); } else setActiveTab(item.id as any); }} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl ${activeTab === item.id ? 'sidebar-active-item' : 'text-white/80 hover:bg-white/10'}`}>
+              <button key={item.id} onClick={() => { if(item.id === 'new_request') { setEditingRequest(null); setIsFormOpen(true); } else setActiveTab(item.id as any); }} className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl ${activeTab === item.id ? 'bg-white/20 text-white font-black' : 'text-white/80 hover:bg-white/10'}`}>
                 <item.icon size={20} />
                 {!sidebarCollapsed && <span className="text-sm font-bold">{item.label}</span>}
               </button>
@@ -248,7 +230,7 @@ const App: React.FC = () => {
              </button>
              <div className="flex items-center gap-3 pr-6 border-r dark:border-gray-700">
                 <span className="text-xs font-black dark:text-white">{session.user.email}</span>
-                <div className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center font-black" style={{backgroundColor: settings.primaryColor}}>{session.user.email.charAt(0).toUpperCase()}</div>
+                <div className="w-10 h-10 text-white rounded-xl flex items-center justify-center font-black" style={{backgroundColor: settings.primaryColor}}>{session.user.email.charAt(0).toUpperCase()}</div>
              </div>
           </div>
         </header>
@@ -260,7 +242,7 @@ const App: React.FC = () => {
             <div className="max-w-7xl mx-auto">
               {activeTab === 'dashboard' && <Dashboard requests={requests} settings={settings} onViewAll={() => setActiveTab('requests')} onAddRequest={() => setIsFormOpen(true)} />}
               {activeTab === 'requests' && <div className="space-y-6">
-                  <div className="flex justify-between items-center"><h2 className="text-2xl font-black dark:text-white">إدارة الطلبات</h2><button onClick={() => setIsFormOpen(true)} className="bg-primary text-white px-6 py-3 rounded-xl font-black text-sm" style={{backgroundColor: settings.primaryColor}}>+ طلب جديد</button></div>
+                  <div className="flex justify-between items-center"><h2 className="text-2xl font-black dark:text-white">إدارة الطلبات</h2><button onClick={() => setIsFormOpen(true)} className="text-white px-6 py-3 rounded-xl font-black text-sm" style={{backgroundColor: settings.primaryColor}}>+ طلب جديد</button></div>
                   <RequestTable requests={filteredRequests} settings={settings} onEdit={handleEditRequest} onDelete={setRequestToDelete} onView={handleViewRequest} />
               </div>}
               {activeTab === 'companies' && (
@@ -269,7 +251,6 @@ const App: React.FC = () => {
                   setCompanies={(updater) => {
                     const next = typeof updater === 'function' ? updater(companies) : updater;
                     setCompanies(next);
-                    // Persistent sync for add/delete could be improved but this works for basic sync
                   }} 
                   settings={settings} 
                 />
@@ -285,13 +266,12 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Modals */}
       {requestToDelete && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-in fade-in">
           <div className={`max-w-md w-full rounded-[2.5rem] p-10 text-center ${settings.darkMode ? 'bg-gray-900 text-white' : 'bg-white'}`}>
             <div className="w-20 h-20 bg-red-100 text-red-600 rounded-3xl flex items-center justify-center mx-auto mb-6"><Trash2 size={40} /></div>
             <h3 className="text-xl font-black mb-4">تأكيد الحذف</h3>
-            <p className="text-sm opacity-60 mb-8 font-bold">هذا الإجراء سيقوم بحذف المعاملة من قاعدة بيانات Supabase بشكل نهائي.</p>
+            <p className="text-sm opacity-60 mb-8 font-bold">هذا الإجراء سيقوم بحذف المعاملة بشكل نهائي.</p>
             <div className="flex gap-4">
               <button onClick={confirmDeleteRequest} className="flex-1 bg-red-600 text-white py-4 rounded-2xl font-black">نعم، احذف</button>
               <button onClick={() => setRequestToDelete(null)} className="flex-1 bg-gray-100 dark:bg-gray-800 py-4 rounded-2xl font-black">إلغاء</button>
