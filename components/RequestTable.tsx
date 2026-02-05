@@ -3,7 +3,7 @@ import React from 'react';
 import { 
   Edit2, Trash2, Calendar, CheckCircle, Clock, 
   StopCircle, Search,
-  Download, Printer, Eye
+  Download, Printer, Eye, Building2, User
 } from 'lucide-react';
 import { VehicleRequest, SystemSettings, RequestStatus } from '../types';
 
@@ -44,81 +44,6 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, settings, onEdit,
       return 'IN_PROGRESS';
     }
     return 'INITIAL';
-  };
-
-  const handleDeleteBtn = (e: React.MouseEvent, id: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onDelete(id);
-  };
-
-  const handleEditBtn = (e: React.MouseEvent, req: VehicleRequest) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onEdit(req);
-  };
-
-  const handleViewBtn = (e: React.MouseEvent, req: VehicleRequest) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onView(req);
-  };
-
-  const handleExportPDF = () => {
-    window.print();
-  };
-
-  const handleExportCSV = () => {
-    if (requests.length === 0) {
-      alert("لا توجد بيانات لتصديرها.");
-      return;
-    }
-
-    try {
-      const headers = ['#', 'الاسم الكامل', 'تاريخ الطلب', 'رقم اللوحة', 'الشركة', 'العائدية', 'رقم الكتاب', 'تاريخ الكتاب', 'تاريخ الاستحقاق', 'حالة المعاملة', 'السبب/الملاحظات'];
-      const rows = requests.map((req, i) => {
-        const dueDate = req.correspondence.status === RequestStatus.DONE && req.correspondence.bookDate 
-          ? calculateDueDate(req.correspondence.bookDate, req.settlementDays).toLocaleDateString('ar-EG')
-          : '—';
-          
-        const internalStatus = getRowStatus(req);
-        let statusLabel = 'قيد المراجعة';
-        if (internalStatus === 'STOPPED') statusLabel = 'موقوفة';
-        else if (internalStatus === 'COMPLETED') statusLabel = 'منجزة كلياً';
-        else if (internalStatus === 'OVERDUE') statusLabel = 'متجاوزة';
-        else if (internalStatus === 'WARNING') statusLabel = 'قرب الاستحقاق';
-        else if (internalStatus === 'IN_PROGRESS') statusLabel = 'قيد الاستيفاء';
-
-        return [
-          i + 1,
-          `"${req.applicantName.replace(/"/g, '""')}"`,
-          req.requestDate,
-          `"${req.vehicleNumber.replace(/"/g, '""')}"`,
-          `"${req.company.replace(/"/g, '""')}"`,
-          `"${req.ownership.replace(/"/g, '""')}"`,
-          `"${(req.correspondence.bookNumber || '').replace(/"/g, '""')}"`,
-          req.correspondence.bookDate || '',
-          dueDate,
-          statusLabel,
-          `"${(req.notes || '').replace(/"/g, '""')}"`
-        ];
-      });
-      
-      const BOM = '\uFEFF';
-      const csvString = [headers, ...rows].map(e => e.join(",")).join("\n");
-      const csvContent = BOM + csvString;
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.setAttribute("href", url);
-      link.setAttribute("download", `سجل_المعاملات_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 100);
-    } catch (error) {
-      console.error(error);
-      alert("فشل التصدير.");
-    }
   };
 
   return (
@@ -165,49 +90,37 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, settings, onEdit,
         }
       `}</style>
 
-      {/* Header for PDF Printing */}
       <div className="print-header text-right">
         <h1 className="text-2xl font-black">{settings.departmentName}</h1>
         <h2 className="text-lg font-bold">{settings.sectionName} - {settings.branchName}</h2>
         <p className="text-sm mt-2">تقرير سجل الطلبات - التاريخ: {new Date().toLocaleDateString('ar-EG')}</p>
       </div>
 
-      {/* Table Actions Header */}
-      <div className={`no-print px-4 lg:px-8 py-4 lg:py-5 flex items-center justify-between rounded-3xl border-2 ${settings.darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-100 shadow-sm'}`}>
+      {/* Controls Header */}
+      <div className={`no-print px-4 py-4 flex items-center justify-between rounded-2xl lg:rounded-3xl border-2 ${settings.darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-100 shadow-sm'}`}>
         <div className="flex items-center gap-3">
           <div className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse"></div>
           <span className={`text-[10px] lg:text-xs font-black uppercase tracking-widest ${settings.darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-            المعروض: {requests.length}
+            المعروض: {requests.length} طلب
           </span>
         </div>
         <div className="flex gap-2">
           <button 
-            onClick={handleExportPDF}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black transition-all active:scale-95 shadow-lg ${
+            onClick={() => window.print()}
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black transition-all active:scale-95 shadow-lg ${
               settings.darkMode 
                 ? 'bg-gray-700 text-red-400 hover:bg-red-600 hover:text-white border border-gray-600' 
                 : 'bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border border-red-100'
             }`}
           >
             <Printer size={14} />
-            <span className="hidden sm:inline">تصدير PDF</span>
-          </button>
-          <button 
-            onClick={handleExportCSV}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black transition-all active:scale-95 shadow-lg ${
-              settings.darkMode 
-                ? 'bg-gray-700 text-blue-400 hover:bg-blue-600 hover:text-white border border-gray-600' 
-                : 'bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-100'
-            }`}
-          >
-            <Download size={14} />
-            <span className="hidden sm:inline">تصدير CSV</span>
+            <span className="hidden sm:inline">PDF</span>
           </button>
         </div>
       </div>
 
-      {/* Desktop Table View */}
-      <div className={`table-container overflow-hidden rounded-[2.5rem] border-2 ${settings.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-2xl`}>
+      {/* Desktop Table View (Hidden on Mobile) */}
+      <div className={`hidden lg:block table-container overflow-hidden rounded-[2.5rem] border-2 ${settings.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} shadow-2xl`}>
         <table className="w-full text-right border-collapse">
           <thead>
             <tr className={`${settings.darkMode ? 'bg-gray-700/50 text-gray-400' : 'bg-gray-50 text-gray-500'} text-xs font-black border-b dark:border-gray-700 uppercase tracking-widest`}>
@@ -265,9 +178,9 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, settings, onEdit,
                   </td>
                   <td className="no-print actions-cell px-8 py-6 text-center">
                     <div className="flex items-center justify-center gap-3">
-                      <button onClick={(e) => handleViewBtn(e, req)} className="p-3 rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-200 transition-all shadow-sm" title="مشاهدة"><Eye size={16} /></button>
-                      <button onClick={(e) => handleEditBtn(e, req)} className="p-3 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm" title="تعديل"><Edit2 size={16} /></button>
-                      <button onClick={(e) => handleDeleteBtn(e, req.id)} className="p-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm" title="حذف"><Trash2 size={16} /></button>
+                      <button onClick={() => onView(req)} className="p-3 rounded-xl bg-gray-50 text-gray-600 hover:bg-gray-200 transition-all shadow-sm"><Eye size={16} /></button>
+                      <button onClick={() => onEdit(req)} className="p-3 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"><Edit2 size={16} /></button>
+                      <button onClick={() => onDelete(req.id)} className="p-3 rounded-xl bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -277,12 +190,70 @@ const RequestTable: React.FC<RequestTableProps> = ({ requests, settings, onEdit,
         </table>
       </div>
 
+      {/* Mobile Card View (Visible on Mobile) */}
+      <div className="lg:hidden grid grid-cols-1 gap-4 no-print">
+        {requests.map((req) => {
+          const status = getRowStatus(req);
+          const isCompleted = status === 'COMPLETED';
+          const isStopped = status === 'STOPPED';
+          const isOverdue = status === 'OVERDUE';
+
+          return (
+            <div 
+              key={req.id} 
+              className={`p-5 rounded-[1.75rem] border-2 transition-all active:scale-[0.98] ${
+                isStopped ? 'bg-red-50/10 border-red-600/30' : 
+                isOverdue ? 'bg-orange-50/10 border-orange-500/30' : 
+                (settings.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100 shadow-lg')
+              }`}
+              onClick={() => onView(req)}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg text-white`} style={{ backgroundColor: isStopped ? '#dc2626' : isOverdue ? '#f97316' : isCompleted ? '#16a34a' : settings.primaryColor }}>
+                    {req.applicantName.charAt(0)}
+                  </div>
+                  <div>
+                    <h4 className={`text-sm font-black ${settings.darkMode ? 'text-white' : 'text-gray-900'}`}>{req.applicantName}</h4>
+                    <p className="text-[10px] text-gray-400 font-bold">{req.vehicleNumber}</p>
+                  </div>
+                </div>
+                <span className={`text-[9px] font-black px-3 py-1.5 rounded-xl border flex items-center gap-1.5 ${isStopped ? 'bg-red-100 text-red-700' : isCompleted ? 'bg-green-100 text-green-700' : isOverdue ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
+                   {isStopped ? <StopCircle size={10} /> : <Clock size={10} />}
+                   {isStopped ? 'موقوفة' : isCompleted ? 'منجزة' : isOverdue ? 'متجاوزة' : 'قيد المعالجة'}
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4 text-[10px] font-bold">
+                 <div className="space-y-1">
+                    <span className="text-gray-400 uppercase tracking-tighter">الشركة المعتمدة</span>
+                    <p className={`truncate ${settings.darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{req.company}</p>
+                 </div>
+                 <div className="space-y-1">
+                    <span className="text-gray-400 uppercase tracking-tighter">تاريخ الاستحقاق</span>
+                    <p className={`${isOverdue ? 'text-red-500' : (settings.darkMode ? 'text-gray-300' : 'text-gray-700')}`}>
+                      {req.correspondence.bookDate ? calculateDueDate(req.correspondence.bookDate, req.settlementDays).toLocaleDateString('ar-EG') : '—'}
+                    </p>
+                 </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-4 border-t dark:border-gray-700" onClick={(e) => e.stopPropagation()}>
+                <button onClick={() => onEdit(req)} className="flex-1 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-black text-[11px] flex items-center justify-center gap-2">
+                  <Edit2 size={12} /> تعديل
+                </button>
+                <button onClick={() => onDelete(req.id)} className="flex-1 py-2.5 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-black text-[11px] flex items-center justify-center gap-2">
+                  <Trash2 size={12} /> حذف
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {requests.length === 0 && (
-        <div className="no-print py-20 text-center flex flex-col items-center gap-4 bg-white dark:bg-gray-800 rounded-[2.5rem] border-2 border-dashed border-gray-200 dark:border-gray-700">
-          <div className="p-6 bg-gray-50 dark:bg-gray-700/50 rounded-full text-gray-300">
-            <Search size={48} />
-          </div>
-          <p className="text-gray-400 font-black">لا توجد سجلات حالياً</p>
+        <div className="no-print py-16 text-center flex flex-col items-center gap-4 bg-white dark:bg-gray-800 rounded-[2.5rem] border-2 border-dashed border-gray-200 dark:border-gray-700">
+          <Search size={40} className="text-gray-200" />
+          <p className="text-gray-400 font-black text-sm">لا توجد سجلات مطابقة للبحث</p>
         </div>
       )}
     </div>
