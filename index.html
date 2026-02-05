@@ -10,9 +10,11 @@
     <style>
       body {
         font-family: 'Cairo', sans-serif;
+        margin: 0;
+        padding: 0;
       }
-      .rtl-grid {
-        direction: rtl;
+      #root {
+        min-height: 100vh;
       }
     </style>
     <script type="importmap">
@@ -21,10 +23,9 @@
     "react": "https://esm.sh/react@19.0.0",
     "react-dom": "https://esm.sh/react-dom@19.0.0",
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "lucide-react": "https://esm.sh/lucide-react@0.463.0",
-    "recharts": "https://esm.sh/recharts@2.13.3",
+    "lucide-react": "https://esm.sh/lucide-react@0.463.0?external=react",
+    "recharts": "https://esm.sh/recharts@2.13.3?external=react,react-dom",
     "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.46.1",
-    "firebase/": "https://esm.sh/firebase@^12.8.0/",
     "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
     "react/": "https://esm.sh/react@^19.2.4/"
   }
@@ -33,7 +34,6 @@
   </head>
   <body class="bg-gray-50 text-gray-900">
     <div id="root"></div>
-    <!-- تضمين ملف المدخل الرئيسي للمتصفح -->
     <script type="module" src="./index.tsx"></script>
   </body>
 </html>
