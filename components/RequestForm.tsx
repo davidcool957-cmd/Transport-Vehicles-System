@@ -82,7 +82,7 @@ const RequestForm: React.FC<RequestFormProps> = ({ isOpen, onClose, onSave, init
                     value={formData.vehicleNumber} onChange={(e) => setFormData({ ...formData, vehicleNumber: e.target.value })} />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">نوع الملكية</label>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest">عائدية المركبة</label>
                   <input required type="text" className={`w-full px-4 py-3.5 rounded-2xl border-2 outline-none font-bold text-sm transition-all focus:border-blue-500 ${settings.darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 border-gray-100'}`}
                     value={formData.ownership} onChange={(e) => setFormData({ ...formData, ownership: e.target.value })} />
                 </div>
