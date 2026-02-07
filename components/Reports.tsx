@@ -4,7 +4,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
-import { Download, Printer, BarChart3, TrendingUp, CheckCircle, Clock, ListChecks, Building2, AlertTriangle } from 'lucide-react';
+import { Download, Printer, BarChart3, TrendingUp, CheckCircle, Clock, ListChecks, Building2, AlertTriangle, FileText, AlertOctagon } from 'lucide-react';
 import { VehicleRequest, SystemSettings, RequestStatus } from '../types';
 
 interface ReportsProps {
@@ -30,18 +30,23 @@ const Reports: React.FC<ReportsProps> = ({ requests, settings }) => {
     return { total, completed, pending, stopped, financialCollected, companyData };
   }, [requests]);
 
-  const handleExportPDF = () => {
+  const handleExportPDF = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     window.print();
   };
 
-  const handleExportCSV = () => {
+  const handleExportCSV = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (requests.length === 0) {
       alert("لا توجد بيانات لتصديرها حالياً.");
       return;
     }
 
     try {
-      const headers = ['المسلسل', 'اسم المالك', 'رقم المركبة', 'الشركة', 'تاريخ الطلب', 'الحالة النهائية', 'ملاحظات'];
+      const headers = ['المسلسل', 'اسم المالك', 'رقم المركبة', 'الشركة', 'تاريخ الطلب', 'الحالة النهائية', 'أسباب الإيقاف/ملاحظات'];
       const rows = requests.map((r, i) => [
         i + 1,
         `"${(r.applicantName || '').replace(/"/g, '""')}"`,
@@ -49,8 +54,8 @@ const Reports: React.FC<ReportsProps> = ({ requests, settings }) => {
         `"${(r.company || '').replace(/"/g, '""')}"`,
         r.requestDate || '',
         r.cancellation?.status === RequestStatus.DONE ? 'منجزة كلياً' : 
-        r.cancellation?.status === RequestStatus.STOPPED ? 'موقوفة 🛑' : 'قيد الإجراء',
-        `"${(r.notes || '').replace(/"/g, '""')}"`
+        r.cancellation?.status === RequestStatus.STOPPED ? 'موقوفة إدارياً' : 'قيد الإجراء',
+        r.cancellation?.status === RequestStatus.STOPPED ? `"${(r.cancellation.stopReason || '').replace(/"/g, '""')}"` : `"${(r.notes || '').replace(/"/g, '""')}"`
       ]);
       
       const BOM = '\uFEFF';
@@ -70,20 +75,36 @@ const Reports: React.FC<ReportsProps> = ({ requests, settings }) => {
       }, 100);
     } catch (error) {
       console.error("Export Error:", error);
-      alert("حدث خطأ أثناء محاولة التصدير. يرجى المحاولة مرة أخرى.");
+      alert("حدث خطأ أثناء محاولة التصدير.");
     }
   };
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-1000 h-full">
-      <style>{`
-        @media print {
-          .no-print { display: none !important; }
-          .print-only { display: block !important; }
-          body { background: white !important; }
-          main { padding: 0 !important; margin: 0 !important; }
-        }
-      `}</style>
+    <div className="space-y-12 animate-in fade-in duration-1000">
+      {/* الترويسة المخصصة للطباعة فقط */}
+      <div className="hidden print:block text-center border-b-4 border-black pb-8 mb-10">
+        <div className="flex justify-between items-center px-4 mb-4">
+          <div className="text-right space-y-1">
+             <p className="font-black text-xl">{settings.departmentName}</p>
+             <p className="font-bold text-lg">{settings.sectionName}</p>
+             <p className="font-bold text-md">{settings.branchName}</p>
+          </div>
+          <div className="w-24 h-24">
+            {settings.logoUrl ? (
+              <img src={settings.logoUrl} alt="Logo" className="w-full h-full object-contain" />
+            ) : (
+              <div className="w-full h-full bg-gray-100 rounded-xl flex items-center justify-center border-2 border-gray-200 text-gray-400">
+                <Building2 size={32} />
+              </div>
+            )}
+          </div>
+          <div className="text-left space-y-1 font-bold text-sm">
+             <p>التاريخ: {new Date().toLocaleDateString('ar-EG')}</p>
+             <p>رقم التقرير: {Math.floor(Math.random() * 90000 + 10000)}</p>
+          </div>
+        </div>
+        <h1 className="text-3xl font-black underline">تقرير إحصائي شامل لمعاملات إلغاء الاعتمادية</h1>
+      </div>
 
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 no-print text-right">
         <div className="text-right">
@@ -109,34 +130,16 @@ const Reports: React.FC<ReportsProps> = ({ requests, settings }) => {
         </div>
       </div>
 
-      <div className="hidden print-only text-center mb-16 border-b-8 border-double border-black pb-10 rtl">
-        <div className="flex items-center justify-center mb-6">
-          {settings.logoUrl ? (
-            <img src={settings.logoUrl} alt="Logo" className="h-32 object-contain" />
-          ) : (
-            <div className="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center">
-               <Building2 size={48} className="text-gray-400" />
-            </div>
-          )}
-        </div>
-        <h1 className="text-5xl font-black mb-4">{settings.departmentName}</h1>
-        <h2 className="text-3xl font-bold text-gray-700">{settings.sectionName} - {settings.branchName}</h2>
-        <div className="flex justify-between mt-12 text-lg font-black pt-6 border-t border-gray-300">
-          <span>تاريخ التقرير: {new Date().toLocaleDateString('ar-EG')}</span>
-          <span>تصنيف الوثيقة: كشف فني وإحصائي مفصل</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 no-print">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {[
           { label: 'إجمالي الطلبات', value: stats.total, color: 'blue', icon: BarChart3, sub: 'معاملة مسجلة كلياً' },
           { label: 'طلبات مكتملة', value: stats.completed, color: 'green', icon: CheckCircle, sub: 'تم إلغاء اعتماديتها' },
-          { label: 'معاملات موقوفة', value: stats.stopped, color: 'red', icon: AlertTriangle, sub: 'تم إيقاف العمل عليها' },
+          { label: 'معاملات موقوفة', value: stats.stopped, color: 'red', icon: AlertOctagon, sub: 'إيقاف إداري معلن' },
           { label: 'رسوم مستوفاة', value: stats.financialCollected, color: 'purple', icon: TrendingUp, sub: 'مدفوعات مالية مؤكدة' },
         ].map((card, i) => (
           <div key={i} className={`p-10 rounded-3xl border-2 ${settings.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} shadow-xl group hover:border-primary transition-all text-right`}>
             <div className="flex items-center justify-between mb-6">
-              <div className="p-4 rounded-3xl bg-gray-50 dark:bg-gray-700 text-primary group-hover:scale-110 transition-transform" style={{ color: settings.primaryColor }}>
+              <div className="p-4 rounded-3xl bg-gray-50 dark:bg-gray-700 text-primary group-hover:scale-110 transition-transform no-print" style={{ color: settings.primaryColor }}>
                 <card.icon size={30} strokeWidth={2.5} />
               </div>
               <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{card.label}</span>
@@ -147,16 +150,15 @@ const Reports: React.FC<ReportsProps> = ({ requests, settings }) => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 no-print">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         <div className={`p-12 rounded-[2.5rem] border-2 ${settings.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} shadow-2xl text-right`}>
           <h3 className={`text-xl font-black mb-12 flex items-center gap-4 ${settings.darkMode ? 'text-white' : 'text-gray-900'}`}>
-            <Building2 size={28} className="text-blue-500" /> توزيع الطلبات حسب الشركات
+            <Building2 size={28} className="text-blue-500 no-print" /> توزيع الطلبات حسب الشركات
           </h3>
           <div className="h-96 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats.companyData} layout="vertical" margin={{ right: 40, left: 20 }}>
                 <CartesianGrid strokeDasharray="4 4" horizontal={false} stroke={settings.darkMode ? '#374151' : '#f3f4f6'} />
-                <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" width={160} tick={{ fontSize: 13, fontWeight: '900', fill: settings.darkMode ? '#9ca3af' : '#4b5563' }} orientation="right" />
                 <Tooltip 
                   contentStyle={{ borderRadius: '24px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25)', textAlign: 'right', direction: 'rtl' }}
@@ -174,7 +176,7 @@ const Reports: React.FC<ReportsProps> = ({ requests, settings }) => {
 
         <div className={`p-12 rounded-[2.5rem] border-2 ${settings.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} shadow-2xl relative text-right`}>
           <h3 className={`text-xl font-black mb-12 flex items-center gap-4 ${settings.darkMode ? 'text-white' : 'text-gray-900'}`}>
-            <CheckCircle size={28} className="text-green-500" /> كفاءة الإنجاز النهائية
+            <CheckCircle size={28} className="text-green-500 no-print" /> كفاءة الإنجاز النهائية
           </h3>
           <div className="h-96 w-full flex items-center justify-center relative">
             <ResponsiveContainer width="100%" height="100%">
@@ -209,7 +211,7 @@ const Reports: React.FC<ReportsProps> = ({ requests, settings }) => {
       </div>
 
       <div className={`p-12 rounded-[2.5rem] border-2 ${settings.darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} shadow-2xl overflow-hidden`}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12 no-print text-right">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 mb-12 text-right no-print">
           <div className="flex items-center gap-5">
             <div className="p-4 bg-gray-100 dark:bg-gray-700 text-primary rounded-3xl" style={{ color: settings.primaryColor }}>
               <ListChecks size={35} strokeWidth={2.5} />
@@ -228,30 +230,32 @@ const Reports: React.FC<ReportsProps> = ({ requests, settings }) => {
                 <th className="px-8 py-6">#</th>
                 <th className="px-8 py-6">اسم المالك</th>
                 <th className="px-8 py-6">رقم المركبة</th>
-                <th className="px-8 py-6">الشركة المعتمدة</th>
+                <th className="px-8 py-6">الحالة التنفيذية</th>
                 <th className="px-8 py-6">تاريخ التقديم</th>
-                <th className="px-8 py-6 text-center">الحالة التنفيذية</th>
+                <th className="px-8 py-6">السبب / الملاحظات</th>
               </tr>
             </thead>
             <tbody className={`text-sm divide-y ${settings.darkMode ? 'divide-gray-700' : 'divide-gray-100'}`}>
               {requests.map((req, idx) => (
-                <tr key={req.id} className={`${settings.darkMode ? 'hover:bg-gray-700/60' : 'hover:bg-gray-50/80'} transition-all ${req.cancellation?.status === RequestStatus.STOPPED ? 'bg-red-50/30 dark:bg-red-900/10' : ''}`}>
+                <tr key={req.id} className={`${settings.darkMode ? 'hover:bg-gray-700/60' : 'hover:bg-gray-50/80'} transition-all ${req.cancellation?.status === RequestStatus.STOPPED ? 'bg-red-50/50 dark:bg-red-900/10' : ''}`}>
                   <td className="px-8 py-6 font-black text-gray-400">{idx + 1}</td>
-                  <td className={`px-8 py-6 font-black ${settings.darkMode ? 'text-white' : 'text-gray-900'}`}>{req.applicantName}</td>
+                  <td className={`px-8 py-6 font-black ${req.cancellation?.status === RequestStatus.STOPPED ? 'text-red-800' : settings.darkMode ? 'text-white' : 'text-gray-900'}`}>{req.applicantName}</td>
                   <td className="px-8 py-6 font-bold text-blue-600 dark:text-blue-400 tracking-tighter">{req.vehicleNumber}</td>
-                  <td className="px-8 py-6 font-medium text-gray-500">{req.company}</td>
-                  <td className="px-8 py-6 text-xs font-black text-gray-400">{req.requestDate}</td>
-                  <td className="px-8 py-6 text-center">
+                  <td className="px-8 py-6">
                     <span className={`px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest ${
                       req.cancellation?.status === RequestStatus.DONE 
                         ? 'bg-green-100 text-green-700 border border-green-200' 
                         : req.cancellation?.status === RequestStatus.STOPPED
-                        ? 'bg-red-100 text-red-700 border border-red-200'
+                        ? 'bg-red-600 text-white shadow-md'
                         : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
                     }`}>
                       {req.cancellation?.status === RequestStatus.DONE ? 'منجزة كلياً' : 
-                       req.cancellation?.status === RequestStatus.STOPPED ? 'موقوفة' : 'قيد المتابعة'}
+                       req.cancellation?.status === RequestStatus.STOPPED ? 'موقوفة نهائياً' : 'قيد المتابعة'}
                     </span>
+                  </td>
+                  <td className="px-8 py-6 text-xs font-black text-gray-400">{req.requestDate}</td>
+                  <td className={`px-8 py-6 text-xs font-bold ${req.cancellation?.status === RequestStatus.STOPPED ? 'text-red-700 italic' : 'text-gray-500'}`}>
+                    {req.cancellation?.status === RequestStatus.STOPPED ? req.cancellation.stopReason : (req.notes || '—')}
                   </td>
                 </tr>
               ))}
@@ -259,18 +263,19 @@ const Reports: React.FC<ReportsProps> = ({ requests, settings }) => {
           </table>
         </div>
         
-        <div className="hidden print-only mt-20 grid grid-cols-3 gap-12 text-center pt-12 border-t-4 border-gray-300 rtl">
-          <div>
-            <p className="font-black text-xl mb-20 underline decoration-2">توقيع مدقق القسم</p>
-            <div className="border-b-2 border-dashed border-gray-500 w-48 mx-auto"></div>
+        {/* منطقة التواقيع للطباعة فقط */}
+        <div className="hidden print:grid grid-cols-3 gap-12 text-center mt-16 pt-12 border-t-2 border-gray-300 rtl">
+          <div className="space-y-16">
+            <p className="font-black text-lg underline">توقيع مدقق القسم</p>
+            <p className="font-bold text-gray-400">........................</p>
           </div>
-          <div>
-            <p className="font-black text-xl mb-20 underline decoration-2">ختم شعبة الاعتمادية</p>
-            <div className="w-40 h-40 border-4 border-dashed border-gray-300 rounded-full mx-auto flex items-center justify-center italic text-gray-300">مكان الختم الرسمي</div>
+          <div className="space-y-16">
+            <p className="font-black text-lg underline">ختم شعبة الاعتمادية</p>
+            <div className="w-32 h-32 border-4 border-dashed border-gray-200 rounded-full mx-auto flex items-center justify-center italic text-gray-200 text-xs">مكان الختم الرسمي</div>
           </div>
-          <div>
-            <p className="font-black text-xl mb-20 underline decoration-2">مصادقة مدير الدائرة</p>
-            <div className="border-b-2 border-dashed border-gray-500 w-48 mx-auto"></div>
+          <div className="space-y-16">
+            <p className="font-black text-lg underline">مصادقة مدير الدائرة</p>
+            <p className="font-bold text-gray-400">........................</p>
           </div>
         </div>
       </div>

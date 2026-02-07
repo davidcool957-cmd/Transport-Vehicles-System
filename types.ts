@@ -9,6 +9,7 @@ export interface AdministrativeStep {
   status: RequestStatus;
   bookNumber?: string;
   bookDate?: string;
+  stopReason?: string;
 }
 
 export interface User {

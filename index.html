@@ -16,6 +16,86 @@
       #root {
         min-height: 100vh;
       }
+      
+      /* نظام الطباعة المحترف - حل نهائي وحاسم */
+      @media print {
+        /* 1. تدمير كافة قيود الارتفاع والتمرير الإجباري */
+        html, body, #root, main, div, section, article {
+          height: auto !important;
+          overflow: visible !important;
+          min-height: 0 !important;
+          max-height: none !important;
+          position: static !important;
+          float: none !important;
+        }
+
+        /* 2. إخفاء العناصر غير الضرورية */
+        aside, 
+        header, 
+        nav, 
+        button, 
+        .no-print, 
+        [role="button"], 
+        .fixed.bottom-0,
+        .fixed.inset-0:not(.modal-print) {
+          display: none !important;
+          visibility: hidden !important;
+        }
+
+        /* 3. تهيئة المودال للطباعة إذا كان مفتوحاً */
+        .fixed.inset-0.z-\[160\], .fixed.inset-0.z-\[250\] {
+          display: block !important;
+          position: relative !important;
+          background: white !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          width: 100% !important;
+        }
+
+        .max-w-3xl, .max-w-4xl {
+          max-width: 100% !important;
+          width: 100% !important;
+          box-shadow: none !important;
+          border: none !important;
+          margin: 0 !important;
+        }
+
+        /* 4. تنسيق النصوص والألوان للطباعة */
+        * {
+          -webkit-print-color-adjust: exact !important;
+          color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+
+        body {
+          background: white !important;
+          color: black !important;
+        }
+
+        /* 5. تنسيق الجداول الرسمية */
+        table {
+          width: 100% !important;
+          border-collapse: collapse !important;
+          page-break-inside: auto !important;
+        }
+        tr {
+          page-break-inside: avoid !important;
+          page-break-after: auto !important;
+        }
+        thead {
+          display: table-header-group !important;
+        }
+        
+        /* 6. منع قص الصور والرسوم البيانية */
+        .recharts-responsive-container {
+          page-break-inside: avoid !important;
+        }
+
+        @page {
+          margin: 1cm;
+          size: auto;
+        }
+      }
     </style>
     <script type="importmap">
 {
