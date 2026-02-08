@@ -1,6 +1,7 @@
 
 export enum RequestStatus {
   PENDING = 'قيد الإجراء',
+  PRINTED = 'تم طباعة الكتاب (قيد التوقيع)',
   DONE = 'تم',
   STOPPED = 'تم إيقاف المعاملة'
 }
