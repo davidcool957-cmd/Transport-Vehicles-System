@@ -141,14 +141,6 @@ const App: React.FC = () => {
     });
   }, [requests, settings.notifications.notifyBeforeDays]);
 
-  const filteredRequests = useMemo(() => {
-    const term = searchTerm.toLowerCase();
-    return requests.filter(req => 
-      (req.applicantName || "").toLowerCase().includes(term) || 
-      (req.vehicleNumber || "").toLowerCase().includes(term)
-    );
-  }, [requests, searchTerm]);
-
   const handleSaveRequest = async (data: VehicleRequest) => {
     try {
       const requestPayload = { ...data };
@@ -253,7 +245,7 @@ const App: React.FC = () => {
             <div className="relative">
               <Search size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" />
               <input 
-                type="text" placeholder="بحث بالاسم أو الرقم..." 
+                type="text" placeholder="بحث سريع بالاسم أو الرقم..." 
                 className="w-full bg-gray-100 dark:bg-gray-800 rounded-2xl pr-12 pl-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/20 dark:text-white"
                 value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
               />
@@ -338,7 +330,7 @@ const App: React.FC = () => {
 
         <div className="flex-1 overflow-y-auto p-4 lg:p-10 pb-24 lg:pb-10">
           {activeTab === 'dashboard' && <Dashboard requests={requests} settings={settings} onViewAll={() => setActiveTab('requests')} onAddRequest={() => setIsFormOpen(true)} />}
-          {activeTab === 'requests' && <RequestTable requests={filteredRequests} settings={settings} onEdit={req => {setEditingRequest(req); setIsFormOpen(true);}} onDelete={setRequestToDelete} onView={setViewingRequest} onAdd={() => {setEditingRequest(null); setIsFormOpen(true);}} />}
+          {activeTab === 'requests' && <RequestTable requests={requests} companies={companies} globalSearchTerm={searchTerm} settings={settings} onEdit={req => {setEditingRequest(req); setIsFormOpen(true);}} onDelete={setRequestToDelete} onView={setViewingRequest} onAdd={() => {setEditingRequest(null); setIsFormOpen(true);}} />}
           {activeTab === 'companies' && <CompanyManager companies={companies} setCompanies={setCompanies} settings={settings} />}
           {activeTab === 'reports' && <Reports requests={requests} settings={settings} />}
           {activeTab === 'users' && <UserManager users={settings.users} onUpdate={u => handleUpdateSettings({...settings, users: u})} settings={settings} />}
