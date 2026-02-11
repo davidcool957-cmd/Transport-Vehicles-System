@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { UserPlus, Pencil, Trash2, Shield, User as UserIcon, X, Save, CheckCircle, AlertTriangle } from 'lucide-react';
+import { UserPlus, Pencil, Trash2, Shield, User as UserIcon, X, Save, CheckCircle, AlertTriangle, Briefcase } from 'lucide-react';
 import { User, SystemSettings } from '../types';
 
 interface UserManagerProps {
@@ -30,15 +30,14 @@ const UserManager: React.FC<UserManagerProps> = ({ users, onUpdate, settings }) 
     setIsModalOpen(true);
   };
 
-  // إصلاح دالة سحب الصلاحية مع حماية إضافية
   const handleDelete = (e: React.MouseEvent, id: string, role: string) => {
     e.preventDefault();
     e.stopPropagation();
 
     // حماية: منع حذف آخر مدير نظام
-    const adminCount = users.filter(u => u.role === 'admin').length;
-    if (role === 'admin' && adminCount <= 1) {
-      alert('لا يمكن سحب صلاحيات مدير النظام الأخير لضمان استمرار الوصول للوحة التحكم.');
+    const adminCount = users.filter(u => u.role === 'admin' || u.role === 'specialist').length;
+    if ((role === 'admin' || role === 'specialist') && adminCount <= 1) {
+      alert('لا يمكن سحب صلاحيات الموظف الأخير ذو الصلاحيات الكاملة لضمان استمرار الوصول للوحة التحكم.');
       return;
     }
 
@@ -98,6 +97,25 @@ const UserManager: React.FC<UserManagerProps> = ({ users, onUpdate, settings }) 
     }, 3000);
   };
 
+  const getRoleLabel = (role: string) => {
+    switch (role) {
+      case 'admin': return 'مدير النظام الكامل';
+      case 'specialist': return 'الموظف المختص (صلاحيات كاملة)';
+      case 'editor': return 'موظف إدخال';
+      case 'viewer': return 'مشاهد فقط';
+      default: return role;
+    }
+  };
+
+  const getRoleStyle = (role: string) => {
+    switch (role) {
+      case 'admin': return 'bg-amber-100 text-amber-700';
+      case 'specialist': return 'bg-indigo-100 text-indigo-700';
+      case 'editor': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
   return (
     <div className="space-y-10 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
@@ -129,8 +147,8 @@ const UserManager: React.FC<UserManagerProps> = ({ users, onUpdate, settings }) 
               <div 
                 className={`w-24 h-24 rounded-3xl flex items-center justify-center text-white text-4xl font-black shadow-2xl transform group-hover:rotate-6 transition-transform`}
                 style={{ 
-                  backgroundColor: user.role === 'admin' ? '#f59e0b' : settings.primaryColor,
-                  boxShadow: `0 20px 40px -10px ${user.role === 'admin' ? '#f59e0b44' : settings.primaryColor + '44'}`
+                  backgroundColor: user.role === 'admin' ? '#f59e0b' : (user.role === 'specialist' ? '#6366f1' : settings.primaryColor),
+                  boxShadow: `0 20px 40px -10px ${user.role === 'admin' ? '#f59e0b44' : (user.role === 'specialist' ? '#6366f144' : settings.primaryColor + '44')}`
                 }}
               >
                 {user.name.charAt(0)}
@@ -138,13 +156,9 @@ const UserManager: React.FC<UserManagerProps> = ({ users, onUpdate, settings }) 
 
               <div className="flex-1 text-right pr-8 pt-2">
                 <h3 className={`text-2xl font-black mb-3 ${settings.darkMode ? 'text-white' : 'text-gray-900'}`}>{user.name}</h3>
-                <div className={`inline-flex items-center gap-2 px-5 py-2 rounded-xl text-[11px] font-black ${
-                  user.role === 'admin' 
-                    ? 'bg-amber-100 text-amber-700' 
-                    : 'bg-blue-100 text-blue-700'
-                }`}>
-                  {user.role === 'admin' ? <Shield size={14} /> : <UserIcon size={14} />}
-                  <span>{user.role === 'admin' ? 'مدير النظام الكامل' : user.role === 'editor' ? 'موظف إدخال' : 'مشاهد فقط'}</span>
+                <div className={`inline-flex items-center gap-2 px-5 py-2 rounded-xl text-[11px] font-black ${getRoleStyle(user.role)}`}>
+                  {user.role === 'admin' ? <Shield size={14} /> : (user.role === 'specialist' ? <Briefcase size={14} /> : <UserIcon size={14} />)}
+                  <span>{getRoleLabel(user.role)}</span>
                 </div>
               </div>
             </div>
@@ -227,6 +241,7 @@ const UserManager: React.FC<UserManagerProps> = ({ users, onUpdate, settings }) 
                   onChange={e => setFormData({ ...formData, role: e.target.value as any })}
                 >
                   <option value="admin">مدير نظام (صلاحيات كاملة)</option>
+                  <option value="specialist">الموظف المختص (صلاحيات كاملة)</option>
                   <option value="editor">موظف (إدخال وتعديل)</option>
                   <option value="viewer">مشاهد (للعرض فقط)</option>
                 </select>
